@@ -5,7 +5,7 @@ Tags: Reading list
 
 1. （windows10）docker的安装：
     1. 教程地址：[https://blog.csdn.net/qq_41723615/article/details/9279946](https://blog.csdn.net/qq_41723615/article/details/92799469)
-    2. 下载和安装**[Docker Desktop](https://www.docker.com/products/docker-toolbox)**：
+    2. 下载和安装[Docker Desktop](https://www.docker.com/products/docker-toolbox)：
         - 安装路径不可以有中文。
         - 在select Additional Tasks的对最后一项打上钩
         - CMD查看是否安装成功，会出现版本信息
