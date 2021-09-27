@@ -1,0 +1,185 @@
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-runtime-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix if "image_tag_suffix" in cuda }} as base
+
+{% if "x86_64" in cuda %}
+FROM base as base-amd64
+
+ENV NV_CUDA_LIB_VERSION {{ cuda.x86_64.components.libraries.version }}
+ENV NV_NVPROF_VERSION {{ cuda.x86_64.components.nvprof.version }}
+ENV NV_CUDA_CUDART_DEV_VERSION {{ cuda.x86_64.components.cudart_dev.version }}
+ENV NV_NVML_DEV_VERSION {{ cuda.x86_64.components.nvml_dev.version }}
+
+ENV NV_LIBNPP_DEV_VERSION {{ cuda.x86_64.components.libnpp_dev.version }}
+
+{% if cuda.version.major_minor in ["9.0", "9.1", "9.2", "10.0"] %}
+ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME cuda-cublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}
+{% else %}
+ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-devel
+{% endif %}
+ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.x86_64.components.libcublas_dev.version }}
+ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}-${NV_LIBCUBLAS_DEV_VERSION}
+
+{% if "libnccl2" in cuda.x86_64.components and cuda.x86_64.components.libnccl2 and "libnccl2_dev" in cuda.x86_64.components and cuda.x86_64.components.libnccl2_dev %}
+{% if "source" in  cuda.x86_64.components.libnccl2 %}
+    {% set nccl_dl_package = 1 %}
+ENV NV_LIBNCCL_DL_BASENAME nccl_{{ cuda.x86_64.components.libnccl2.version }}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}_x86_64.txz
+ENV NV_LIBNCCL_DL_SHA256SUM {{ cuda.x86_64.components.libnccl2.sha256sum }}
+ENV NV_LIBNCCL_DL_SOURCE {{ cuda.x86_64.components.libnccl2.source }}
+{% else %}
+    {% set nccl_package = 1 %}
+ENV NV_LIBNCCL_DEV_PACKAGE_NAME libnccl-devel
+ENV NV_LIBNCCL_DEV_PACKAGE_VERSION {{ cuda.x86_64.components.libnccl2_dev.version }}
+ENV NCCL_VERSION {{ cuda.x86_64.components.libnccl2_dev.version[:-2] }}
+ENV NV_LIBNCCL_DEV_PACKAGE ${NV_LIBNCCL_DEV_PACKAGE_NAME}-${NV_LIBNCCL_DEV_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+{% endif %}
+{% endif %}
+{% if cuda.version.major | int == 8 %}
+ENV NV_CUDA_RUNTIME_DEV_VERSION {{ cuda.x86_64.components.cudart_dev.version }}
+ENV NV_CUDA_RUNTIME_DEV_PACKAGE cuda-core-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_RUNTIME_DEV_VERSION}
+ENV NV_CUDA_CORE_VERSION {{ cuda.x86_64.components.cudart_dev.version }}
+ENV NV_CUDA_CORE_PACKAGE cuda-core-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_CORE_VERSION}
+ENV NV_CUDA_DRIVER_DEV_VERSION {{ cuda.x86_64.components.cudart_dev.version }}
+ENV NV_CUDA_DRIVER_DEV_PACKAGE cuda-driver-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_DRIVER_DEV_VERSION}
+ENV NV_CUDA_MISC_HEADERS_VERSION {{ cuda.x86_64.components.cudart.version }}
+ENV NV_CUDA_MISC_HEADERS_PACKAGE cuda-misc-headers-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_MISC_HEADERS_VERSION}
+ENV NV_CUDA_NVRTC_DEV_VERSION {{ cuda.x86_64.components.nvrtc_dev.version }}
+ENV NV_CUDA_NVRTC_DEV_PACKAGE cuda-nvrtc-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_NVRTC_DEV_VERSION}
+ENV NV_CUDA_NVGRAPH_DEV_VERSION {{ cuda.x86_64.components.nvgraph_dev.version }}
+ENV NV_CUDA_NVGRAPH_DEV_PACKAGE cuda-nvgraph-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_NVGRAPH_DEV_VERSION}
+ENV NV_LIBCUSOLVER_DEV_VERSION {{ cuda.x86_64.components.libcusolver_dev.version }}
+ENV NV_LIBCUSOLVER_DEV_PACKAGE cuda-cusolver-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUSOLVER_DEV_VERSION}
+ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.x86_64.components.libcublas_dev.version }}
+ENV NV_LIBCUBLAS_DEV_PACKAGE cuda-cublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUBLAS_DEV_VERSION}
+ENV NV_LIBCUFFT_DEV_VERSION {{ cuda.x86_64.components.libcufft_dev.version }}
+ENV NV_LIBCUFFT_DEV_PACKAGE cuda-cufft-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUFFT_DEV_VERSION}
+ENV NV_LIBCURAND_DEV_VERSION {{ cuda.x86_64.components.libcurand_dev.version }}
+ENV NV_LIBCURAND_DEV_PACKAGE cuda-curand-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCURAND_DEV_VERSION}
+ENV NV_LIBCUSPARSE_DEV_VERSION {{ cuda.x86_64.components.libcusparse_dev.version }}
+ENV NV_LIBCUSPARSE_DEV_PACKAGE cuda-cusparse-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUSPARSE_DEV_VERSION}
+ENV NV_LIBNPP_DEV_VERSION {{ cuda.x86_64.components.libnpp_dev.version }}
+ENV NV_LIBNPP_DEV_PACKAGE cuda-npp-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_DEV_VERSION}
+{% endif %}
+
+{% endif %}
+{% if "ppc64le" in cuda %}
+FROM base as base-ppc64le
+
+ENV NV_CUDA_LIB_VERSION {{ cuda.ppc64le.components.libraries.version }}
+ENV NV_NVPROF_VERSION {{ cuda.ppc64le.components.nvprof.version }}
+ENV NV_CUDA_CUDART_DEV_VERSION {{ cuda.ppc64le.components.cudart_dev.version }}
+ENV NV_NVML_DEV_VERSION {{ cuda.ppc64le.components.nvml_dev.version }}
+
+ENV NV_LIBNPP_DEV_VERSION {{ cuda.ppc64le.components.libnpp_dev.version }}
+
+{% if cuda.version.major_minor in ["9.0", "9.1", "9.2", "10.0"] %}
+ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME cuda-cublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}
+{% else %}
+ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-devel
+{% endif %}
+ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.ppc64le.components.libcublas_dev.version }}
+ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}-${NV_LIBCUBLAS_DEV_VERSION}
+
+{% if "libnccl2" in cuda.ppc64le.components and cuda.ppc64le.components.libnccl2 and "libnccl2_dev" in cuda.ppc64le.components and cuda.ppc64le.components.libnccl2_dev %}
+{% if "source" in  cuda.ppc64le.components.libnccl2 %}
+ENV NV_LIBNCCL_DL_BASENAME nccl_{{ cuda.ppc64le.components.libnccl2.version }}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}_ppc64le.txz
+ENV NV_LIBNCCL_DL_SHA256SUM {{ cuda.ppc64le.components.libnccl2.sha256sum }}
+ENV NV_LIBNCCL_DL_SOURCE {{ cuda.ppc64le.components.libnccl2.source }}
+{% else %}
+    {% set nccl_package = 1 %}
+ENV NV_LIBNCCL_DEV_PACKAGE_NAME libnccl-devel
+ENV NV_LIBNCCL_DEV_PACKAGE_VERSION {{ cuda.ppc64le.components.libnccl2_dev.version }}
+ENV NCCL_VERSION {{ cuda.ppc64le.components.libnccl2_dev.version[:-2] }}
+ENV NV_LIBNCCL_DEV_PACKAGE ${NV_LIBNCCL_DEV_PACKAGE_NAME}-${NV_LIBNCCL_DEV_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+{% endif %}
+{% endif %}
+{% if cuda.version.major | int == 8 %}
+ENV NV_CUDA_RUNTIME_DEV_VERSION {{ cuda.ppc64le.components.cudart_dev.version }}
+ENV NV_CUDA_RUNTIME_DEV_PACKAGE cuda-core-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_RUNTIME_DEV_VERSION}
+ENV NV_CUDA_CORE_VERSION {{ cuda.ppc64le.components.cudart_dev.version }}
+ENV NV_CUDA_CORE_PACKAGE cuda-core-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_CORE_VERSION}
+ENV NV_CUDA_DRIVER_DEV_VERSION {{ cuda.ppc64le.components.cudart_dev.version }}
+ENV NV_CUDA_DRIVER_DEV_PACKAGE cuda-driver-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_DRIVER_DEV_VERSION}
+ENV NV_CUDA_MISC_HEADERS_VERSION {{ cuda.ppc64le.components.cudart.version }}
+ENV NV_CUDA_MISC_HEADERS_PACKAGE cuda-misc-headers-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_MISC_HEADERS_VERSION}
+ENV NV_CUDA_NVRTC_DEV_VERSION {{ cuda.ppc64le.components.nvrtc_dev.version }}
+ENV NV_CUDA_NVRTC_DEV_PACKAGE cuda-nvrtc-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_NVRTC_DEV_VERSION}
+ENV NV_CUDA_NVGRAPH_DEV_VERSION {{ cuda.ppc64le.components.nvgraph_dev.version }}
+ENV NV_CUDA_NVGRAPH_DEV_PACKAGE cuda-nvgraph-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_NVGRAPH_DEV_VERSION}
+ENV NV_LIBCUSOLVER_DEV_VERSION {{ cuda.ppc64le.components.libcusolver_dev.version }}
+ENV NV_LIBCUSOLVER_DEV_PACKAGE cuda-cusolver-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUSOLVER_DEV_VERSION}
+ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.ppc64le.components.libcublas_dev.version }}
+ENV NV_LIBCUBLAS_DEV_PACKAGE cuda-cublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUBLAS_DEV_VERSION}
+ENV NV_LIBCUFFT_DEV_VERSION {{ cuda.ppc64le.components.libcufft_dev.version }}
+ENV NV_LIBCUFFT_DEV_PACKAGE cuda-cufft-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUFFT_DEV_VERSION}
+ENV NV_LIBCURAND_DEV_VERSION {{ cuda.ppc64le.components.libcurand_dev.version }}
+ENV NV_LIBCURAND_DEV_PACKAGE cuda-curand-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCURAND_DEV_VERSION}
+ENV NV_LIBCUSPARSE_DEV_VERSION {{ cuda.ppc64le.components.libcusparse_dev.version }}
+ENV NV_LIBCUSPARSE_DEV_PACKAGE cuda-cusparse-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUSPARSE_DEV_VERSION}
+ENV NV_LIBNPP_DEV_VERSION {{ cuda.ppc64le.components.libnpp_dev.version }}
+ENV NV_LIBNPP_DEV_PACKAGE cuda-npp-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_DEV_VERSION}
+{% endif %}
+{% endif %}
+
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
+
+{# {% if cuda.version.major | int <= 10 %} #}
+{#   {% set cuda_pkg_version = "$CUDA_PKG_VERSION" %} #}
+{# {% endif -%} #}
+
+{% if cuda.version.major_minor == "10.0" or cuda.version.major_minor == "10.1" %}
+# setopt flag prevents yum from auto upgrading. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
+RUN yum install --setopt=obsoletes=0 -y \
+{% else %}
+RUN yum install -y \
+{% endif %}
+    make \
+    cuda-nvml-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_NVML_DEV_VERSION} \
+    cuda-command-line-tools-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_LIB_VERSION} \
+{% if cuda.version.major | int == 8 %}
+    ${NV_CUDA_CORE_PACKAGE} \
+    ${NV_CUDA_MISC_HEADERS_PACKAGE} \
+    cuda-license-${NV_CUDA_CUDART_DEV_VERSION} \
+    ${NV_CUDA_NVRTC_DEV_PACKAGE} \
+    ${NV_CUDA_NVGRAPH_DEV_PACKAGE} \
+    ${NV_LIBCUSOLVER_DEV_PACKAGE} \
+    ${NV_LIBCUBLAS_DEV_PACKAGE} \
+    ${NV_LIBCUFFT_DEV_PACKAGE} \
+    ${NV_LIBCURAND_DEV_PACKAGE} \
+    ${NV_LIBCUSPARSE_DEV_PACKAGE} \
+    ${NV_LIBNPP_DEV_PACKAGE} \
+    ${NV_CUDA_CUDART_PACKAGE} \
+    ${NV_CUDA_DRIVER_DEV_PACKAGE} \
+{% else %}
+    cuda-cudart-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_CUDART_DEV_VERSION} \
+    cuda-libraries-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_LIB_VERSION} \
+    cuda-minimal-build-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_LIB_VERSION} \
+    cuda-nvprof-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_NVPROF_VERSION} \
+    cuda-npp-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_DEV_VERSION} \
+    ${NV_LIBCUBLAS_DEV_PACKAGE} \
+    {% if nccl_package %}
+    ${NV_LIBNCCL_DEV_PACKAGE} \
+    {% endif -%}
+{% endif %}
+    && yum clean all \
+    && rm -rf /var/cache/yum/*
+
+{% if cuda.version.major | int == 8 %}
+ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
+{% endif -%}
+
+{% if cuda.version.major_minor in ["10.0", "10.1"] and cuda.os.distro != "ubi" %}
+RUN yum install -y yum-plugin-versionlock && yum versionlock ${NV_LIBCUBLAS_PACKAGE_NAME_DEV}
+
+{% endif -%}
+
+{% if nccl_dl_package %}
+RUN yum install -y xz && NCCL_DOWNLOAD_SUM=${NV_LIBNCCL_DL_SHA256SUM} && \
+    curl -fsSL ${NV_LIBNCCL_DL_SOURCE} -O && \
+    echo "$NCCL_DOWNLOAD_SUM  ${NV_LIBNCCL_DL_BASENAME}" | sha256sum -c - && \
+    unxz ${NV_LIBNCCL_DL_BASENAME} && \
+    tar --no-same-owner --keep-old-files -xvf "${NV_LIBNCCL_DL_BASENAME:0:-4}.tar" -C /usr/local/cuda/include/ --strip-components=2 --wildcards '*/include/*' && \
+    tar --no-same-owner --keep-old-files -xvf "${NV_LIBNCCL_DL_BASENAME:0:-4}.tar" -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so' && \
+    rm -f "${NV_LIBNCCL_DL_BASENAME:0:-4}.tar" && \
+    ldconfig
+
+{% endif %}

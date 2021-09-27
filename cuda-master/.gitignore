@@ -1,0 +1,5 @@
+kitpick/
+.idea/
+__pycache__/
+cudnn_artifactory.json
+tag_manifest_l4t_cuda_l4t

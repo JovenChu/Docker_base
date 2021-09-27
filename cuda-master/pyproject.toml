@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "manager.py"
+version = "0.1.0"
+description = "CUDA Docker CI Scripts"
+authors = ["Jesus Alvarez <jesusa@nvidia.com>"]
+
+[tool.poetry.dependencies]
+python = ">3.6"
+pyyaml = "*"
+plumbum = "*"
+jinja2 = "*"
+coloredlogs = "*"
+glom = "*"
+docker = "*"
+gitpython = "^2.1"
+deepdiff = "^4.0"
+mmh3 = "^2.5"
+requests = "^2.22"
+pyyaml-include = "^1.2"
+retry = "^0.9.2"
+setuptools = "^57.0.0"
+packaging = "^20.9"
+beeprint = "^2.4.10"
+six = "^1.16.0"
+
+[tool.poetry.dev-dependencies]
+pytest = ">3.6"

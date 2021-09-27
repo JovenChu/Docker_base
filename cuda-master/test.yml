@@ -1,0 +1,47 @@
+cuda_v11.5.10:
+  dist_base_path: kitpick
+  image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda
+  l4t-cuda:
+    arm64:
+      components:
+        cudart:
+          version: 11.5.29-1
+        cudart_dev:
+          version: 11.5.29-1
+        cudnn8:
+          dev:
+            md5sum: 2fa16b208e08ad7c40e06419825712ee
+            source: https://urm.nvidia.com/artifactory/sw-gpu-cuda-installer-generic-local/packaging/v8.2_cuda_10.2/cudnn/linux-aarch64/8.2.1.32/libcudnn8-dev_8.2.1.32-1+cuda10.2_arm64.deb
+          md5sum: ab3d5d304b237f9153aa576e3979a470
+          source: https://urm.nvidia.com/artifactory/sw-gpu-cuda-installer-generic-local/packaging/v8.2_cuda_10.2/cudnn/linux-aarch64/8.2.1.32/libcudnn8_8.2.1.32-1+cuda10.2_arm64.deb
+          version: 8.2.1.32
+        libcublas:
+          version: 11.6.0.12-1
+        libcublas_dev:
+          version: 11.6.0.12-1
+        libcusparse:
+          version: 11.7.0.27-1
+        libcusparse_dev:
+          version: 11.7.0.27-1
+        nvml_dev:
+          version: 11.5.29-1
+        nvtx:
+          version: 11.5.9-1
+      requires: cuda>=10.2
+    base_image: nvcr.io/nvidian/nvidia-l4t-base:r32.6.1
+    image_tag_suffix: '-001'
+    repo_url: http://cuda-internal.nvidia.com/release-candidates/kitpicks/cuda-r11-5-tegra/11.5.10/001/repos/ubuntu2004
+    template_path: templates/ubuntu
+  push_repos:
+  - artifactory
+push_repos:
+  artifactory:
+    image_name: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/l4t-cuda
+    pass: ARTIFACTORY_PASS
+    registry: urm.nvidia.com
+    user: ARTIFACTORY_USER
+  ngc:
+    image_name: nvcr.io/ea-linux4tegra/l4t-cuda
+    pass: NGC_ACCESS_TOKEN
+    registry: nvcr.io
+    user: $oauthtoken

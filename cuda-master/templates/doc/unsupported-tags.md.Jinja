@@ -1,0 +1,108 @@
+## Unsupported tags
+
+All tags for _[`cuda-arm64`](https://hub.docker.com/r/nvidia/cuda-arm64/tags) and [`cuda-ppc64le`](https://hub.docker.com/r/nvidia/cuda-ppc64le/tags) are **deprecated**_, and are no longer supported along with the tags listed below.
+
+
+> :warning: These tags still exist and may contain critical vulnerabilities.<br> 
+>   _Use at your own risk._
+
+
+{# ----- first updating tags based upon the unsupported CUDA versions ----- #}
+{% set OS = [] %}
+{% for os in tags.supported_distros %}
+    {% set releases = [] %}
+    {% for release in tags.unsupported_cuda_releases %}
+        {% if release is string %}
+            {% set extra_label = release.split(" ") %}
+            {% if extra_label|length == 2 %}
+                {% for key, value in tags.cuda_releases.items() %}
+                    {% if release == value %}
+                        {% for tag in tags.cuda_tags %}
+                            {% if os in tag %}
+                                {% if extra_label[1].lower() in tag %}
+                                    {% set version = tag.split("-") %}
+                                    {% if key == version[0] %}
+                                        {% if os not in OS %}
+                                            {% print "\n### " %}{% print os %}{% print "\n\n" %}
+                                            {% do OS.append(os) %}
+                                        {% endif %}
+                                        {% if release not in releases %}
+                                            {% print "\n#### CUDA " %}{% print release %}{% print "\n\n" %}
+                                            {% do releases.append(release) %}
+                                        {% endif %}
+                                        {% print "- `" %}{% print tag %}{% print "`\n" %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                {% for key, value in tags.cuda_releases.items() %}
+                    {% if release == value %}
+                        {% for tag in tags.cuda_tags %}
+                            {% if os in tag %}
+                                {% set version = tag.split("-") %}
+                                {% if key == version[0] %}
+                                    {% if os not in OS %}
+                                        {% print "### " %}{% print os %}{% print "\n" %}
+                                        {% do OS.append(os) %}
+                                    {% endif %}
+                                    {% if release not in releases %}
+                                        {% print "#### CUDA " %}{% print release %}{% print "\n" %}
+                                        {% do releases.append(release) %}
+                                    {% endif %}
+                                    {% print "- `" %}{% print tag %}{% print "`\n" %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% else %}
+                {% for key, value in tags.cuda_releases.items() %}
+                    {% if release == value %}
+                        {% for tag in tags.cuda_tags %}
+                            {% if os in tag %}
+                                {% set version = tag.split("-") %}
+                                {% if key == version[0] %}
+                                    {% if os not in OS %}
+                                        {% print "### " %}{% print os %}{% print "\n" %}
+                                        {% do OS.append(os) %}
+                                    {% endif %}
+                                    {% if release not in releases %}
+                                        {% print "#### CUDA " %}{% print release %}{% print "\n" %}
+                                        {% do releases.append(release) %}
+                                    {% endif %}
+                                    {% print "- `" %}{% print tag %}{% print "`\n" %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+{# ----- now updating tags based upon the unsupported distros ----- #}
+{% set OS = [] %}
+{% for os in tags.unsupported_distros %}
+    {% set releases = [] %}
+    {% for release_key, release_value in tags.cuda_releases.items() %}
+        {% for tag in tags.cuda_tags %}
+            {% if os in tag %}
+                {% set version = tag.split("-") %}
+                {% if release_key == version[0] %}
+                    {% if os not in OS %}
+                        {% print "### " %}{% print os %}{% print "\n" %}
+                        {% do OS.append(os) %}
+                    {% endif %}
+                    {% if release_key not in releases %}
+                        {% print "#### CUDA " %}{% print release_key %}{% print "\n" %}
+                        {% do releases.append(release_key) %}
+                    {% endif %}
+                    {% print "- `" %}{% print tag %}{% print "`\n" %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% endfor %}

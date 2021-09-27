@@ -1,0 +1,79 @@
+FROM {{ cuda.base_image }} as base
+
+{% if "x86_64" in cuda %}
+FROM base as base-amd64
+
+ENV NVARCH x86_64
+{% if "requires" in cuda.x86_64 %}
+ENV NVIDIA_REQUIRE_CUDA "{{ cuda.x86_64.requires }}"
+{% endif %}
+ENV NV_CUDA_CUDART_VERSION {{ cuda.x86_64.components.cudart.version }}
+
+COPY cuda.repo-x86_64 /etc/yum.repos.d/cuda.repo
+{% if "use_ml_repo" in cuda.x86_64 and cuda.x86_64.use_ml_repo %}
+COPY nvidia-ml.repo-x86_64 /etc/yum.repos.d/nvidia-ml.repo
+{% endif %}
+
+{% endif %}
+{% if "arm64" in cuda %}
+FROM base as base-arm64
+
+ENV NVARCH sbsa
+{% if "requires" in cuda.arm64 %}
+ENV NVIDIA_REQUIRE_CUDA "{{ cuda.arm64.requires }}"
+{% endif %}
+ENV NV_CUDA_CUDART_VERSION {{ cuda.arm64.components.cudart.version }}
+
+COPY cuda.repo-arm64 /etc/yum.repos.d/cuda.repo
+{% if "use_ml_repo" in cuda.arm64 and cuda.arm64.use_ml_repo %}
+COPY nvidia-ml.repo-arm64 /etc/yum.repos.d/nvidia-ml.repo
+{% endif %}
+{% endif %}
+
+{% if "ppc64le" in cuda %}
+FROM base as base-ppc64le
+
+ENV NVARCH ppc64le
+{% if "requires" in cuda.ppc64le %}
+ENV NVIDIA_REQUIRE_CUDA "{{ cuda.ppc64le.requires }}"
+{% endif %}
+ENV NV_CUDA_CUDART_VERSION {{ cuda.ppc64le.components.cudart.version }}
+
+COPY cuda.repo-ppc64le /etc/yum.repos.d/cuda.repo
+{% if "use_ml_repo" in cuda.ppc64le and cuda.ppc64le.use_ml_repo %}
+COPY nvidia-ml.repo-ppc64le /etc/yum.repos.d/nvidia-ml.repo
+{% endif %}
+{% endif %}
+
+FROM base-${TARGETARCH}
+
+ARG TARGETARCH
+
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
+
+RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
+    curl -fsSL {{ cuda.repo_url }}/${NVARCH}/7fa2af80.pub | sed '/^Version/d' > /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA && \
+    echo "$NVIDIA_GPGKEY_SUM  /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA" | sha256sum -c --strict -
+
+ENV CUDA_VERSION {{ cuda.version.release_label }}
+
+# For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
+RUN yum upgrade -y && yum install -y \
+    cuda-cudart-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_CUDART_VERSION} \
+    cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }} \
+    && ln -s cuda-{{ cuda.version.major }}.{{ cuda.version.minor }} /usr/local/cuda \
+    && yum clean all \
+    && rm -rf /var/cache/yum/*
+
+# nvidia-docker 1.0
+RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
+    echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
+
+ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
+
+COPY NGC-DL-CONTAINER-LICENSE /
+
+# nvidia-container-runtime
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility

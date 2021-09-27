@@ -1,0 +1,19 @@
+push_repos:
+  artifactory:
+    user: ARTIFACTORY_USER
+    pass: ARTIFACTORY_PASS
+    registry: urm.nvidia.com
+    image_name: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda-release-candidate/cuda
+
+l4t_push_repos:
+  artifactory:
+    registry: urm.nvidia.com
+    user: ARTIFACTORY_USER
+    pass: ARTIFACTORY_PASS
+    image_name: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/l4t-cuda
+  # Also needed for authorizition so that list of image tags can be pulled from ngc
+  ngc:
+    registry: nvcr.io
+    pass: NGC_ACCESS_TOKEN
+    user: $oauthtoken
+    image_name: nvcr.io/ea-linux4tegra/l4t-cuda

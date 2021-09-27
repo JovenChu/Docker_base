@@ -1,0 +1,39 @@
+{% set iz_dev = "" %}
+{% if cuda.cudnn.target == "devel" -%}
+  {% set iz_dev = "-devel" %}
+{% endif %}
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:{{ cuda.version.release_label }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }} as base
+
+{% if "x86_64" in cuda %}
+FROM base as base-amd64
+
+ENV NV_CUDNN_VERSION {{ cuda.x86_64.cudnn.version }}
+ENV NV_CUDNN_PACKAGE libcudnn{{ cuda.x86_64.cudnn.version[0] }}{{ iz_dev }}-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+
+{% endif %}
+{% if "arm64" in cuda %}
+FROM base as base-arm64
+
+ENV NV_CUDNN_VERSION {{ cuda.arm64.cudnn.version }}
+ENV NV_CUDNN_PACKAGE libcudnn{{ cuda.arm64.cudnn.version[0] }}{{ iz_dev }}-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+
+{% endif %}
+{% if "ppc64le" in cuda %}
+FROM base as base-ppc64le
+
+ENV NV_CUDNN_VERSION {{ cuda.ppc64le.cudnn.version }}
+ENV NV_CUDNN_PACKAGE libcudnn{{ cuda.ppc64le.cudnn.version[0] }}{{ iz_dev }}-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+
+{% endif %}
+FROM base-${TARGETARCH}
+
+ARG TARGETARCH
+
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
+
+LABEL com.nvidia.cudnn.version="${NV_CUDNN_VERSION}"
+
+RUN yum install -y ${NV_CUDNN_PACKAGE} \
+    && yum clean all \
+    && rm -rf /var/cache/yum/*

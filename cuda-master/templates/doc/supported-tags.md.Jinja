@@ -1,0 +1,49 @@
+## Supported tags
+
+A full list of tags that are supported with CUDA, cuDNN, and security updates.
+
+> :information_source: Repos:<br> 
+> _nvcr.io/nvidia/cuda_<br>
+> _docker.io/nvidia/cuda_
+
+{%- set OS = [] %}
+
+{% for os in tags.supported_distros %}
+    {% set releases = [] %}
+    {% for release_key, release_value in tags.supported_cuda_releases.items() %}
+        {% for tag in tags.cuda_tags %}
+            {% if os in tag %}
+                {% set path = tag.split("-") %}
+                {% if release_key == path[0] %}
+                    {% if os not in OS %}
+                        {% print "\n### " %}{% print os %}{% print "\n" %}
+                        {% do OS.append(os) %}
+                    {% endif %}
+                    {% if release_key not in releases %}
+                        {% print "\n#### CUDA " %}{% print release_value %}{% print "\n\n" %}
+                        {% do releases.append(release_key) %}
+                    {% endif %}
+                    {% print "- [`" %}{% print tag %}{% print "` (*" %}
+                    {# ----->  "TO CALCULATE THE RELATIVE DOCKERFILE PATHS" <----- #}
+                    {% set vars = {'label1':'None', 'label2':'None', 'label3':'None', 'label4':'None'} %}
+                    {% for value in path %}
+                        {%  if value == release_key  %}
+                            {% do vars.update({'label1':value}) %}
+                        {% elif ( value.startswith("centos") or  value.startswith("ubuntu") or value.startswith("ubi") ) %}
+                            {% do vars.update({'label2':value}) %}
+                        {% elif value in ("base", "devel", "runtime") %}
+                            {% do vars.update({'label3':value}) %}
+                        {% elif "cudnn" in value %}
+                            {% do vars.update({'label4':value}) %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if "cudnn" in vars['label4'] %}
+                        {% print vars['label1'] %}{% print "/" %}{{ vars['label2'] }}{% print "/" %}{{ vars['label3'] }}{% print "/" %}{{ vars['label4'] }}{% print "/Dockerfile" %}{% print "*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/" %}{{ vars['label1'] }}{% print "/" %}{{ vars['label2'] }}{% print "/" %}{{ vars['label3'] }}{% print "/" %}{{ vars['label4'] }}{% print "/Dockerfile" %}{% print ")\n" %}
+                    {% else %}
+                        {% print vars['label1'] %}{% print "/" %}{{ vars['label2'] }}{% print "/" %}{{ vars['label3'] }}{% print "/Dockerfile" %}{% print "*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/" %}{{ vars['label1'] }}{% print "/" %}{{ vars['label2'] }}{% print "/" %}{{ vars['label3'] }}{% print "/Dockerfile" %}{% print ")\n" %}
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% endfor %}

@@ -1,0 +1,81 @@
+ARG IMAGE_NAME
+ARG FROM_SCRIPTS_IMAGE=gitlab-master.nvidia.com:5005/dl/devops/build-scripts:latest
+FROM ${FROM_SCRIPTS_IMAGE} AS build-scripts
+
+FROM ${IMAGE_NAME}:{{ cuda.version.release_label }}-devel-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix if "image_tag_suffix" in cuda }}
+
+ENV TENSORRT_VERSION ${TRT_VERSION}
+LABEL com.nvidia.tensorrt.version="${TENSORRT_VERSION}"
+ARG NVIDIA_TENSORRT_VERSION
+ENV NVIDIA_TENSORRT_VERSION ${NVIDIA_TENSORRT_VERSION}
+ARG TRTOSS_VERSION=master
+ENV TENSORRT_OSS_VERSION ${TRTOSS_VERSION}
+
+ARG PYVER=3.8
+RUN if [ "$PYVER" == "3.8" ]; then DISTUTILS="python3-distutils"; fi
+
+# Install package dependencies
+RUN PYSFX=`echo "$PYVER" | cut -c1-1 || echo ""` && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        python$PYSFX \
+        python$PYVER-dev \
+        $DISTUTILS \
+        python$PYSFX-pip \
+        libcurl4-openssl-dev \
+        zlib1g-dev \
+        pkg-config \
+        unzip && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install cmake-3.14 required by some python components and OSS.
+RUN CMAKE_VERSION=3.14 && \
+    CMAKE_BUILD=3.14.4 && \
+    curl -L https://cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_BUILD}.tar.gz | tar -xzf - && \
+    cd /cmake-${CMAKE_BUILD} && \
+    ./bootstrap --parallel=$(nproc) --system-curl && \
+    make -j"$(nproc)" install && \
+    rm -rf /cmake-${CMAKE_BUILD}
+
+# Download pybind11-2.2.3 required by some python samples
+RUN cd ${HOME} && \
+    git clone -b v2.2.3 https://github.com/pybind/pybind11.git
+
+# Ensure "python" gets $PYVER version of python
+RUN rm -f /usr/bin/python && ln -s /usr/bin/python$PYVER /usr/bin/python
+RUN MAJ=`echo "$PYVER" | cut -c1-1` && \
+    rm -f /usr/bin/python$MAJ && ln -s /usr/bin/python$PYVER /usr/bin/python$MAJ
+
+RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
+    python get-pip.py && \
+    rm get-pip.py
+
+RUN pip install --upgrade --no-cache-dir numpy && \
+    pip install --upgrade --no-cache-dir pycuda pillow
+
+# Install TensorRT
+RUN --mount=from=build-scripts,source=build-scripts,target=/nvidia/build-scripts \
+    URL=$(VERIFY=1 BASE=0 DEVEL=0 SAMPLES=0 PYTHON=0 /nvidia/build-scripts/installTRT.sh 2>/dev/null | sed -n "s/^.*\(http.*\)deb.*$/\1/p")tar \
+    && FILE=$(wget -O - $URL 2>/dev/null | sed -n 's/^.*href="\(TensorRT[^"]*\)".*$/\1/p' | grep -v internal) \
+    && wget --quiet $URL/$FILE -O - | tar -xz \
+    && PY=$(python -c 'import sys; print(str(sys.version_info[0])+str(sys.version_info[1]))') \
+    && pip install TensorRT-*/python/tensorrt-*-cp$PY*.whl \
+    && pip install TensorRT-*/graphsurgeon/graphsurgeon-*.whl \
+    && pip install TensorRT-*/uff/uff-*.whl \
+    && mv /usr/src/tensorrt /opt/ \
+    && mv TensorRT-*/samples /opt/tensorrt/ \
+    && mv TensorRT-*/data /opt/tensorrt/ \
+    && ln -s /opt/tensorrt /usr/src/tensorrt \
+    && rm -r TensorRT-* \
+    && UFF_PATH=$(pip show uff | sed -n 's/Location: \(.*\)$/\1/p')/uff \
+    && sed -i 's/from tensorflow import GraphDef/from tensorflow.python import GraphDef/' \
+       $UFF_PATH/converters/tensorflow/conversion_helpers.py \
+    && chmod +x ${UFF_PATH}/bin/convert_to_uff.py \
+    && ln -sf ${UFF_PATH}/bin/convert_to_uff.py /usr/local/bin/convert-to-uff
+
+# Install Polygraphy
+RUN pip install --no-cache-dir \
+    --extra-index-url https://pypi.ngc.nvidia.com \
+    --extra-index-url https://tensorrt-read-only:Tensorrt\@123@urm.nvidia.com/artifactory/api/pypi/sw-tensorrt-pypi/simple \
+    polygraphy
+
+COPY python_setup.sh /opt/tensorrt/python/python_setup.sh

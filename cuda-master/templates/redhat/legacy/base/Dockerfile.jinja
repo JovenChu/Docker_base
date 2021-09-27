@@ -1,0 +1,123 @@
+FROM {{ cuda.base_image }} as base
+
+{% if "x86_64" in cuda %}
+FROM base as base-amd64
+
+ENV NVARCH x86_64
+{% if "requires" in cuda.x86_64 %}
+ENV NVIDIA_REQUIRE_CUDA {{ cuda.x86_64.requires }}
+{% endif %}
+ENV NV_CUDA_CUDART_VERSION {{ cuda.x86_64.components.cudart.version }}
+
+COPY cuda.repo-x86_64 /etc/yum.repos.d/cuda.repo
+{% if "use_ml_repo" in cuda.x86_64 and cuda.x86_64.use_ml_repo %}
+COPY nvidia-ml.repo-x86_64 /etc/yum.repos.d/nvidia-ml.repo
+
+{% endif %}
+{% if cuda.version.major | int == 8 %}
+ENV NV_CUDA_NVRTC_VERSION {{ cuda.x86_64.components.nvrtc.version }}
+ENV NV_CUDA_NVRTC_PACKAGE cuda-nvrtc-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_NVRTC_VERSION}
+ENV NV_CUDA_NVGRAPH_VERSION {{ cuda.x86_64.components.nvgraph.version }}
+ENV NV_CUDA_NVGRAPH_PACKAGE cuda-nvgraph-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_NVGRAPH_VERSION}
+ENV NV_LIBCUSOLVER_VERSION {{ cuda.x86_64.components.libcusolver.version }}
+ENV NV_LIBCUSOLVER_PACKAGE cuda-cusolver-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUSOLVER_VERSION}
+ENV NV_LIBCUBLAS_VERSION {{ cuda.x86_64.components.libcublas.version }}
+ENV NV_LIBCUBLAS_PACKAGE cuda-libcublas-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUBLAS_VERSION}
+ENV NV_LIBCUFFT_VERSION {{ cuda.x86_64.components.libcufft.version }}
+ENV NV_LIBCUFFT_PACKAGE cuda-cufft-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUFFT_VERSION}
+ENV NV_LIBCURAND_VERSION {{ cuda.x86_64.components.libcurand.version }}
+ENV NV_LIBCURAND_PACKAGE cuda-curand-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCURAND_VERSION}
+ENV NV_LIBCUSPARSE_VERSION {{ cuda.x86_64.components.libcusparse.version }}
+ENV NV_LIBCUSPARSE_PACKAGE cuda-cusparse-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUSPARSE_VERSION}
+ENV NV_LIBNPP_VERSION {{ cuda.x86_64.components.libnpp.version }}
+ENV NV_LIBNPP_PACKAGE cuda-npp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_VERSION}
+{% endif %}
+
+{% endif %}
+{% if "ppc64le" in cuda %}
+FROM base as base-ppc64le
+
+ENV NVARCH ppc64le
+{% if "requires" in cuda.ppc64le %}
+ENV NVIDIA_REQUIRE_CUDA {{ cuda.ppc64le.requires }}
+{% endif %}
+ENV NV_CUDA_CUDART_VERSION {{ cuda.ppc64le.components.cudart.version }}
+
+COPY cuda.repo-ppc64le /etc/yum.repos.d/cuda.repo
+{% if "use_ml_repo" in cuda.ppc64le and cuda.ppc64le.use_ml_repo %}
+COPY nvidia-ml.repo-ppc64le /etc/yum.repos.d/nvidia-ml.repo
+{% endif %}
+{% if cuda.version.major | int == 8 %}
+ENV NV_CUDA_NVRTC_VERSION {{ cuda.ppc64le.components.nvrtc.version }}
+ENV NV_CUDA_NVRTC_PACKAGE cuda-nvrtc-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_NVRTC_VERSION}
+ENV NV_CUDA_NVGRAPH_VERSION {{ cuda.ppc64le.components.nvgraph.version }}
+ENV NV_CUDA_NVGRAPH_PACKAGE cuda-nvgraph-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_NVGRAPH_VERSION}
+ENV NV_LIBCUSOLVER_VERSION {{ cuda.ppc64le.components.libcusolver.version }}
+ENV NV_LIBCUSOLVER_PACKAGE cuda-cusolver-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUSOLVER_VERSION}
+ENV NV_LIBCUBLAS_VERSION {{ cuda.ppc64le.components.libcublas.version }}
+ENV NV_LIBCUBLAS_PACKAGE cuda-libcublas-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUBLAS_VERSION}
+ENV NV_LIBCUFFT_VERSION {{ cuda.ppc64le.components.libcufft.version }}
+ENV NV_LIBCUFFT_PACKAGE cuda-cufft-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUFFT_VERSION}
+ENV NV_LIBCURAND_VERSION {{ cuda.ppc64le.components.libcurand.version }}
+ENV NV_LIBCURAND_PACKAGE cuda-curand-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCURAND_VERSION}
+ENV NV_LIBCUSPARSE_VERSION {{ cuda.ppc64le.components.libcusparse.version }}
+ENV NV_LIBCUSPARSE_PACKAGE cuda-cusparse-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUSPARSE_VERSION}
+ENV NV_LIBNPP_VERSION {{ cuda.ppc64le.components.libnpp.version }}
+ENV NV_LIBNPP_PACKAGE cuda-npp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_VERSION}
+{% endif %}
+
+{% endif -%}
+
+FROM base-${TARGETARCH}
+
+ARG TARGETARCH
+
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
+
+RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
+    curl -fsSL {{ cuda.repo_url }}/${NVARCH}/7fa2af80.pub | sed '/^Version/d' > /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA && \
+    echo "$NVIDIA_GPGKEY_SUM  /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA" | sha256sum -c {% if cuda.os.version | int != 6 %}--strict {% endif %} -
+
+ENV CUDA_VERSION {{ cuda.version.release_label }}
+{% if cuda.version.major | int == 8 %}
+ENV CUDA_PKG_VERSION {{ cuda.version.major }}-{{ cuda.version.minor }}-$CUDA_VERSION-1
+{% endif %}
+
+# For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
+RUN yum upgrade -y && yum install -y \
+{% if cuda.version.major | int == 8 %}
+    ${NV_CUDA_NVRTC_PACKAGE} \
+    ${NV_CUDA_NVGRAPH_PACKAGE} \
+    ${NV_LIBCUSOLVER_PACKAGE} \
+    ${NV_LIBCUBLAS_PACKAGE} \
+    ${NV_LIBCUFFT_PACKAGE} \
+    ${NV_LIBCURAND_PACKAGE} \
+    ${NV_LIBCUSPARSE_PACKAGE} \
+    ${NV_LIBNPP_PACKAGE} \
+    ${NV_CUDA_CUDART_PACKAGE} \
+{% else %}
+    cuda-cudart-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_CUDART_VERSION} \
+{% endif %}
+{% if cuda.version.major | int >= 10 %}
+    cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }} \
+{% endif %}
+    && ln -s cuda-{{ cuda.version.major }}.{{ cuda.version.minor }} /usr/local/cuda \
+    && yum clean all \
+    && rm -rf /var/cache/yum/*
+
+# nvidia-docker 1.0
+{% if cuda.version.major | int == 8 or cuda.version.major | int == 9 -%}
+LABEL com.nvidia.volumes.needed="nvidia_driver"
+LABEL com.nvidia.cuda.version="${CUDA_VERSION}"
+{% endif %}
+RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
+    echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
+
+ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
+
+COPY NGC-DL-CONTAINER-LICENSE /
+
+# nvidia-container-runtime
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
