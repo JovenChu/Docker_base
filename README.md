@@ -2,6 +2,7 @@
 
 Created: September 27, 2021 10:57 AM
 Tags: Reading list
+知乎查看：https://zhuanlan.zhihu.com/p/415071043
 
 1. （windows10）docker的安装：
     1. 教程地址：[https://blog.csdn.net/qq_41723615/article/details/9279946](https://blog.csdn.net/qq_41723615/article/details/92799469)
