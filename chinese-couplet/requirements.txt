@@ -1,0 +1,14 @@
+Flask==1.1.1
+Flask-Cors==3.0.10
+gevent==1.2.0
+Jinja2==2.10.1
+numpy==1.18.1
+pandas==0.25.3
+tensorflow==1.14.0
+tensorflow-addons==0.14.0
+tensorflow-estimator==1.14.0rc0
+tensorflow-hub==0.7.0
+tqdm==4.42.1
+typing==3.7.4.3
+ujson==1.35
+urllib3==1.25.8

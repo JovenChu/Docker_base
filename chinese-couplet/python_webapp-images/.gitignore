@@ -1,0 +1,10 @@
+*.pyc
+*.pyo
+app.db
+tmp
+*~
+*.swp
+db_repository
+uploads
+.vagrant/
+.DS_Store

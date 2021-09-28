@@ -1,0 +1,2 @@
+model_checkpoint_path: "/content/drive/My Drive/Text Summary/seq2seq-couplet-master/models/output_couplet/model.ckpl"
+all_model_checkpoint_paths: "/content/drive/My Drive/Text Summary/seq2seq-couplet-master/models/output_couplet/model.ckpl"

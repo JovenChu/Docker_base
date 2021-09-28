@@ -1,0 +1,9 @@
+Flask==1.1.1
+Flask-Cors==3.0.10
+gevent==1.2.0
+Jinja2==2.10.1
+numpy==1.18.1
+Keras-applications==1.0.8
+h5py==2.10.0
+futures==2.2.0
+tensorflow==1.14.0

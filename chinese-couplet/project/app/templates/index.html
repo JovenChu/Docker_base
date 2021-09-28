@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<!--
+	Edit by Joven Chu,jovenchu.cn
+	Spectral by HTML5 UP，html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>中文对联生成助手</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="/static/assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="/static/assets/css/noscript.css" /></noscript>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	</head>
+	<body class="landing is-preload">
+		<!-- Page Wrapper -->
+			<div id="page-wrapper">
+
+				<!-- Header -->
+					<header id="header" class="alt">
+						<h1><a href="index.html">Joven</a></h1>
+						<nav id="nav">
+							<ul>
+								<li class="special">
+									<a href="#menu" class="menuToggle"><span>Menu</span></a>
+									<div id="menu">
+										<ul>
+											<li><a href="index.html">首页</a></li>
+											<li><a href="#">登录</a></li>
+											<li><a href="#">注册</a></li>
+										</ul>
+									</div>
+								</li>
+							</ul>
+						</nav>
+					</header>
+
+				<!-- Banner -->
+					<section id="banner">
+						<div class="inner">
+							<h2>对王之王</h2>
+							<p>中文对联生成助手——AI创造国粹<br />
+							Another Chinese Quintessence<br />
+							Model by <a href="https://github.com/JovenChu/Chinese_Couplet" target="_blank">Seq2Seq</a>.</p>
+							<ul class="actions special">
+								<li><a href="https://jovenchu.cn/2020/07/16/2020-07-16-Chinese-Couplet/" class="button primary" target="_blank">模型构建</a></li>
+							</ul>
+						</div>
+						<a href="#one" class="more scrolly">开启探索</a>
+					</section>
+
+				<!-- CTA -->
+					<section id="cta" class="wrapper style4">
+						<div class="inner">
+							<header>
+								<div id="userInput">
+									<input id="textInput" type="text" name="msg" placeholder="输入上联（50字以内）,回车键提交" />
+								</div>
+								<br>
+								<br>
+								<div id="onebox">
+
+								</div>
+								<div id="twobox">
+
+								</div>
+								<br>
+								<br>
+
+							</header>
+							<ul class="actions stacked">
+								<li><button type="submit" id="submit" class="button primary" onclick="getBotResponse()">放马过来</button></li>
+							</ul>
+						</div>
+							  <script>
+								function getBotResponse() {
+								  var rawText = $("#textInput").val();
+								  var userHtml = '<p><h3>上联：  ' + rawText + "</h3></p>";
+								  $("#textInput").val("");
+								  $("#onebox").html(userHtml);
+								  document
+									.getElementById("userInput")
+									.scrollIntoView({ block: "start", behavior: "smooth" });
+								  $.get("/get", { msg: rawText }).done(function(data) {
+									var botHtml = '<p><h3>下联：  ' + data + "</h3></p>";
+									$("#twobox").html(botHtml);
+									document
+									  .getElementById("userInput")
+									  .scrollIntoView({ block: "start", behavior: "smooth" });
+								  });
+								}
+								$("#textInput").keypress(function(e) {
+								  if (e.which == 13) {
+									getBotResponse();
+								  }
+								});
+							  </script>
+					</section>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<ul class="icons">
+							<li><a href="https://github.com/JovenChu" class="icon brands fa-github" target="_blank"><span class="label">Github</span></a></li>
+							<li><a href="https://github.com/JovenChu" class="icon brands fa-twitter" target="_blank"><span class="label">Twitter</span></a></li>
+							<li><a href="http://jovenchu.cn" class="icon brands fa-facebook-f" target="_blank"><span class="label">Facebook</span></a></li>
+							<li><a href="http://jovenchu.cn" class="icon brands fa-instagram" target="_blank"><span class="label">Instagram</span></a></li>
+							<li><a href="http://jovenchu.cn" class="icon solid fa-envelope" target="_blank"><span class="label">Email</span></a></li>
+						</ul>
+						<ul class="copyright">
+							<li>&copy; AI-Demo</li><li>Power By: <a href="http://jovenchu.cn" target="_blank">Joven</a></li>
+						</ul>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="/static/assets/js/jquery.min.js"></script>
+			<script src="/static/assets/js/jquery.scrollex.min.js"></script>
+			<script src="/static/assets/js/jquery.scrolly.min.js"></script>
+			<script src="/static/assets/js/browser.min.js"></script>
+			<script src="/static/assets/js/breakpoints.min.js"></script>
+			<script src="/static/assets/js/util.js"></script>
+			<script src="/static/assets/js/main.js"></script>
+
+
+	</body>
+</html>
