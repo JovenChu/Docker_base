@@ -557,6 +557,6 @@ Tags: Reading list
             - 修改IP为浪潮平台部署的地址，并且修改访问协议为http（flask代码中），即可访问。
 6. 说明
     - 除项目镜像，以上制作的docker、完整的项目代码已上传至百度云盘，或在docker hub搜索，均可供下载使用。
-        - 地址：
-        - 验证码：
+        - 链接：https://pan.baidu.com/s/1QOGrQusqJE73T7WDXu4dgA
+        - 提取码：7zcp
     - 说明：从制作镜像的第3步开始，dockerfile就是按照浪潮AI Station的服务格式进行编写的了，如果只是用于终端或服务器运行及部署项目，可以选择不安装jupyter
